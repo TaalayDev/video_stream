@@ -951,7 +951,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
                     binaryMessenger:_messenger
                 ];
                 
-                [eventChannel setStreamHandler:cam];
+                // [eventChannel setStreamHandler:cam];
                 cam.eventChannel = eventChannel;
                 result(@{
                     @"textureId" : @(textureId),
