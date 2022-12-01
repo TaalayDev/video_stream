@@ -81,16 +81,24 @@ previewPhotoSampleBuffer:(CMSampleBufferRef)previewPhotoSampleBuffer
         _result(getFlutterError(error));
         return;
     }
-    NSData *data = [AVCapturePhotoOutput
-                    JPEGPhotoDataRepresentationForJPEGSampleBuffer:photoSampleBuffer
-                    previewPhotoSampleBuffer:previewPhotoSampleBuffer];
-    UIImage *image = [UIImage imageWithCGImage:[UIImage imageWithData:data].CGImage
-                                         scale:1.0
-                                   orientation:[self getImageRotation]];
+    NSData *data = [
+        AVCapturePhotoOutput
+        JPEGPhotoDataRepresentationForJPEGSampleBuffer:photoSampleBuffer
+        previewPhotoSampleBuffer:previewPhotoSampleBuffer
+    ];
+    UIImage *image = [
+        UIImage imageWithCGImage:[UIImage imageWithData:data].CGImage
+        scale:1.0
+        orientation:[self getImageRotation]
+    ];
     // TODO(sigurdm): Consider writing file asynchronously.
     bool success = [UIImageJPEGRepresentation(image, 1.0) writeToFile:_path atomically:YES];
     if (!success) {
-        _result([FlutterError errorWithCode:@"IOError" message:@"Unable to write file" details:nil]);
+        _result([
+            FlutterError errorWithCode:@"IOError"
+            message:@"Unable to write file"
+            details:nil
+        ]);
         return;
     }
     _result(nil);
@@ -846,10 +854,14 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 }
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
     FlutterMethodChannel *channel =
-    [FlutterMethodChannel methodChannelWithName:@"video_stream"
-                                binaryMessenger:[registrar messenger]];
-    VideoStreamPlugin *instance = [[VideoStreamPlugin alloc] initWithRegistry:[registrar textures]
-                                                                        messenger:[registrar messenger]];
+    [
+        FlutterMethodChannel methodChannelWithName:@"video_stream"
+        binaryMessenger:[registrar messenger]
+    ];
+    VideoStreamPlugin *instance = [
+        [VideoStreamPlugin alloc] initWithRegistry:[registrar textures]
+        messenger:[registrar messenger]
+    ];
     [registrar addMethodCallDelegate:instance channel:channel];
 }
 
@@ -875,10 +887,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 - (void)handleMethodCallAsync:(FlutterMethodCall *)call result:(FlutterResult)result {
     if ([@"availableCameras" isEqualToString:call.method]) {
-        AVCaptureDeviceDiscoverySession *discoverySession = [AVCaptureDeviceDiscoverySession
-                                                             discoverySessionWithDeviceTypes:@[ AVCaptureDeviceTypeBuiltInWideAngleCamera ]
-                                                             mediaType:AVMediaTypeVideo
-                                                             position:AVCaptureDevicePositionUnspecified];
+        AVCaptureDeviceDiscoverySession *discoverySession = [
+            AVCaptureDeviceDiscoverySession
+            discoverySessionWithDeviceTypes:@[ AVCaptureDeviceTypeBuiltInWideAngleCamera ]
+            mediaType:AVMediaTypeVideo
+            position:AVCaptureDevicePositionUnspecified
+        ];
         NSArray<AVCaptureDevice *> *devices = discoverySession.devices;
         NSMutableArray<NSDictionary<NSString *, NSObject *> *> *reply =
         [[NSMutableArray alloc] initWithCapacity:devices.count];
@@ -903,42 +917,53 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         }
         result(reply);
     } else if ([@"initialize" isEqualToString:call.method]) {
-        NSString *cameraName = call.arguments[@"cameraName"];
-        NSString *resolutionPreset = call.arguments[@"resolutionPreset"];
-        NSString *streamingPreset = call.arguments[@"streamingPreset"];
-        NSNumber *enableAudio = call.arguments[@"enableAudio"];
-        NSError *error;
-        FLTCam *cam = [[FLTCam alloc] initWithCameraName:cameraName
-                                        resolutionPreset:resolutionPreset
-                                         streamingPreset:streamingPreset
-                                             enableAudio:[enableAudio boolValue]
-                                           dispatchQueue:_dispatchQueue
-                                                   error:&error];
-        if (error) {
-            result(getFlutterError(error));
-        } else {
-            if (_camera) {
-                [_camera close];
+        @try {
+            NSString *cameraName = call.arguments[@"cameraName"];
+            NSString *resolutionPreset = call.arguments[@"resolutionPreset"];
+            NSString *streamingPreset = call.arguments[@"streamingPreset"];
+            NSNumber *enableAudio = call.arguments[@"enableAudio"];
+            NSError *error;
+            FLTCam *cam = [
+                [FLTCam alloc] initWithCameraName:cameraName
+                resolutionPreset:resolutionPreset
+                streamingPreset:streamingPreset
+                enableAudio:[enableAudio boolValue]
+                dispatchQueue:_dispatchQueue
+                error:&error
+            ];
+            if (error) {
+                result(getFlutterError(error));
+            } else {
+                if (_camera) {
+                    [_camera close];
+                }
+                int64_t textureId = [_registry registerTexture:cam];
+                _camera = cam;
+                cam.onFrameAvailable = ^{
+                    [self->_registry textureFrameAvailable:textureId];
+                };
+                FlutterEventChannel *eventChannel = [
+                    FlutterEventChannel
+                    eventChannelWithName:[
+                        NSString stringWithFormat:@"video_stream/cameraEvents%lld",
+                        textureId
+                    ]
+                    binaryMessenger:_messenger
+                ];
+                
+                [eventChannel setStreamHandler:cam];
+                cam.eventChannel = eventChannel;
+                result(@{
+                    @"textureId" : @(textureId),
+                    @"previewWidth" : @(cam.previewSize.width),
+                    @"previewHeight" : @(cam.previewSize.height),
+                    @"captureWidth" : @(cam.captureSize.width),
+                    @"captureHeight" : @(cam.captureSize.height),
+                });
+                [cam start];
             }
-            int64_t textureId = [_registry registerTexture:cam];
-            _camera = cam;
-            cam.onFrameAvailable = ^{
-                [_registry textureFrameAvailable:textureId];
-            };
-            FlutterEventChannel *eventChannel = [FlutterEventChannel
-                                                 eventChannelWithName:[NSString stringWithFormat:@"video_stream/cameraEvents%lld",textureId]
-                                                 binaryMessenger:_messenger];
-            
-            [eventChannel setStreamHandler:cam];
-            cam.eventChannel = eventChannel;
-            result(@{
-                @"textureId" : @(textureId),
-                @"previewWidth" : @(cam.previewSize.width),
-                @"previewHeight" : @(cam.previewSize.height),
-                @"captureWidth" : @(cam.captureSize.width),
-                @"captureHeight" : @(cam.captureSize.height),
-                   });
-            [cam start];
+        } @catch(NSException * e) {
+            NSLog(@"Exception: %@", e);
         }
     } else if ([@"startImageStream" isEqualToString:call.method]) {
         [_camera startImageStreamWithMessenger:_messenger];

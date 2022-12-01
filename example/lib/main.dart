@@ -40,7 +40,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
   late VoidCallback videoPlayerListener;
   bool enableAudio = true;
   bool useOpenGL = true;
-  String streamURL = "rtmp://[your rtmp server address]/live";
+  String streamURL = "rtmp://141.8.194.195/hls/74bcb327d1";
   bool streaming = false;
   String? cameraDirection;
 
@@ -212,7 +212,9 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
                         )
                       : ElevatedButton(
                           onPressed: () => onVideoStreamingButtonPressed(),
-                          style: ButtonStyle( backgroundColor: MaterialStateProperty.all<Color>(Colors.blue)),
+                          style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all<Color>(
+                                  Colors.blue)),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             mainAxisAlignment: MainAxisAlignment.center,
