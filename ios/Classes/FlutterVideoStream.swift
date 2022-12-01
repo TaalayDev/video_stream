@@ -201,38 +201,38 @@ public class SwiftVideoStreamPlugin : NSObject {
 }
 
 
-class MyRTMPStreamQoSDelagate: RTMPStreamDelegate {
-    let minBitrate: UInt32 = 300 * 1024
-    let maxBitrate: UInt32 = 2500 * 1024
-    let incrementBitrate: UInt32 = 512 * 1024
-    
-    func rtmpStream(_ stream: RTMPStream,  didPublishSufficientBW connection: RTMPConnection) {
-        guard let videoBitrate = stream.videoSettings[.bitrate] as? UInt32 else { return }
-        
-        var newVideoBitrate = videoBitrate + incrementBitrate
-        if newVideoBitrate > maxBitrate {
-            newVideoBitrate = maxBitrate
-        }
-        print("didPublishSufficientBW update: \(videoBitrate) -> \(newVideoBitrate)")
-        stream.videoSettings[.bitrate] = newVideoBitrate
-    }
-    
-    
-    // detect upload insufficent BandWidth
-    func rtmpStream(_ stream:RTMPStream, didPublishInsufficientBW connection:RTMPConnection) {
-        guard let videoBitrate = stream.videoSettings[.bitrate] as? UInt32 else { return }
-        
-        var         newVideoBitrate = UInt32(videoBitrate / 2)
-        if newVideoBitrate < minBitrate {
-            newVideoBitrate = minBitrate
-        }
-        print("didPublishInsufficientBW update: \(videoBitrate) -> \(newVideoBitrate)")
-        stream.videoSettings[.bitrate] = newVideoBitrate
-    }
-    
-    func rtmpStreamDidClear(_ stream:RTMPStream) {
-    }
-}
+//class MyRTMPStreamQoSDelagate: RTMPStreamDelegate {
+//    let minBitrate: UInt32 = 300 * 1024
+//    let maxBitrate: UInt32 = 2500 * 1024
+//    let incrementBitrate: UInt32 = 512 * 1024
+//
+//    func rtmpStream(_ stream: RTMPStream,  didPublishSufficientBW connection: RTMPConnection) {
+//        guard let videoBitrate = stream.videoSettings[.bitrate] as? UInt32 else { return }
+//
+//        var newVideoBitrate = videoBitrate + incrementBitrate
+//        if newVideoBitrate > maxBitrate {
+//            newVideoBitrate = maxBitrate
+//        }
+//        print("didPublishSufficientBW update: \(videoBitrate) -> \(newVideoBitrate)")
+//        stream.videoSettings[.bitrate] = newVideoBitrate
+//    }
+//
+//
+//    // detect upload insufficent BandWidth
+//    func rtmpStream(_ stream:RTMPStream, didPublishInsufficientBW connection:RTMPConnection) {
+//        guard let videoBitrate = stream.videoSettings[.bitrate] as? UInt32 else { return }
+//
+//        var         newVideoBitrate = UInt32(videoBitrate / 2)
+//        if newVideoBitrate < minBitrate {
+//            newVideoBitrate = minBitrate
+//        }
+//        print("didPublishInsufficientBW update: \(videoBitrate) -> \(newVideoBitrate)")
+//        stream.videoSettings[.bitrate] = newVideoBitrate
+//    }
+//
+//    func rtmpStreamDidClear(_ stream:RTMPStream) {
+//    }
+//}
 
 // private struct Constants {
 //     static let bitrateDown: Double = 0.75
