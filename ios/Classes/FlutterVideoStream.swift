@@ -201,95 +201,38 @@ public class SwiftVideoStreamPlugin : NSObject {
 }
 
 
-//class MyRTMPStreamQoSDelagate: RTMPStreamDelegate {
-//    let minBitrate: UInt32 = 300 * 1024
-//    let maxBitrate: UInt32 = 2500 * 1024
-//    let incrementBitrate: UInt32 = 512 * 1024
-//
-//    func rtmpStream(
-//        _ stream: HaishinKit.RTMPStream,
-//        publishInsufficientBWOccured connection: HaishinKit.RTMPConnection
-//    ) {
-//        guard let videoBitrate = stream.videoSettings[.bitrate] as? UInt32 else { return }
-//
-//        var newVideoBitrate = videoBitrate + incrementBitrate
-//        if newVideoBitrate > maxBitrate {
-//            newVideoBitrate = maxBitrate
-//        }
-//        print("didPublishSufficientBW update: \(videoBitrate) -> \(newVideoBitrate)")
-//        stream.videoSettings[.bitrate] = newVideoBitrate
-//    }
-//
-//    func rtmpStream(
-//        _ stream: HaishinKit.RTMPStream,
-//        publishSufficientBWOccured connection: HaishinKit.RTMPConnection
-//    ) {
-//        guard let videoBitrate = stream.videoSettings[.bitrate] as? UInt32 else { return }
-//
-//        var newVideoBitrate = UInt32(videoBitrate / 2)
-//        if newVideoBitrate < minBitrate {
-//            newVideoBitrate = minBitrate
-//        }
-//        print("didPublishInsufficientBW update: \(videoBitrate) -> \(newVideoBitrate)")
-//        stream.videoSettings[.bitrate] = newVideoBitrate
-//    }
-//
-//    func rtmpStream(_ stream: HaishinKit.RTMPStream, updatedStats connection: HaishinKit.RTMPConnection) {
-//        //
-//    }
-//
-//
-//    func rtmpStream(
-//        _ stream: HaishinKit.RTMPStream,
-//        didOutput audio: AVAudioBuffer,
-//        presentationTimeStamp: CMTime
-//    ) {
-//        //
-//    }
-//
-//    func rtmpStream(
-//        _ stream: HaishinKit.RTMPStream,
-//        didOutput video: CMSampleBuffer
-//    ) {
-//        //
-//    }
-//
-//    func rtmpStream(_ stream: HaishinKit.RTMPStream, videoCodecErrorOccurred error: HaishinKit.VideoCodec.Error) {
-//        //
-//    }
-//
-//    func rtmpStreamDidClear(_ stream: HaishinKit.RTMPStream) {
-//        //
-//    }
+class MyRTMPStreamQoSDelagate: RTMPStreamDelegate {
+    let minBitrate: UInt32 = 300 * 1024
+    let maxBitrate: UInt32 = 2500 * 1024
+    let incrementBitrate: UInt32 = 512 * 1024
     
-     
+    func rtmpStream(_ stream: RTMPStream,  didPublishSufficientBW connection: RTMPConnection) {
+        guard let videoBitrate = stream.videoSettings[.bitrate] as? UInt32 else { return }
+        
+        var newVideoBitrate = videoBitrate + incrementBitrate
+        if newVideoBitrate > maxBitrate {
+            newVideoBitrate = maxBitrate
+        }
+        print("didPublishSufficientBW update: \(videoBitrate) -> \(newVideoBitrate)")
+        stream.videoSettings[.bitrate] = newVideoBitrate
+    }
     
-//     func rtmpStream(
-//        _ stream: RTMPStream,
-//        publishInsufficientBWOccured connection: RTMPConnection
-//     ) {
-//         guard let videoBitrate = stream.videoSettings[.bitrate] as? UInt32 else { return }
-//
-//         var newVideoBitrate = videoBitrate + incrementBitrate
-//         if newVideoBitrate > maxBitrate {
-//             newVideoBitrate = maxBitrate
-//         }
-//         print("didPublishSufficientBW update: \(videoBitrate) -> \(newVideoBitrate)")
-//         stream.videoSettings[.bitrate] = newVideoBitrate
-//     }
-//
-//     func rtmpStream(_ stream: RTMPStream, didPublishSufficientBW connection: RTMPConnection) {
-//         guard let videoBitrate = stream.videoSettings[.bitrate] as? UInt32 else { return }
-//
-//         var         newVideoBitrate = UInt32(videoBitrate / 2)
-//         if newVideoBitrate < minBitrate {
-//             newVideoBitrate = minBitrate
-//         }
-//         print("didPublishInsufficientBW update: \(videoBitrate) -> \(newVideoBitrate)")
-//         stream.videoSettings[.bitrate] = newVideoBitrate
-//     }
     
- // }
+    // detect upload insufficent BandWidth
+    func rtmpStream(_ stream:RTMPStream, didPublishInsufficientBW connection:RTMPConnection) {
+        guard let videoBitrate = stream.videoSettings[.bitrate] as? UInt32 else { return }
+        
+        var         newVideoBitrate = UInt32(videoBitrate / 2)
+        if newVideoBitrate < minBitrate {
+            newVideoBitrate = minBitrate
+        }
+        print("didPublishInsufficientBW update: \(videoBitrate) -> \(newVideoBitrate)")
+        stream.videoSettings[.bitrate] = newVideoBitrate
+    }
+    
+    func rtmpStreamDidClear(_ stream:RTMPStream) {
+    }
+}
 
 // private struct Constants {
 //     static let bitrateDown: Double = 0.75
